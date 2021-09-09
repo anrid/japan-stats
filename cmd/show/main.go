@@ -159,11 +159,8 @@ func main() {
 
 			var prefsTotal float64
 			for _, p := range d.Prefectures {
-				if p.Name == "Okayama" {
-					fmt.Printf("year: %s pref: %s value: %.f add: %.f\n", d.Year, p.Name, prefs[p.Name], p.Value)
-				}
-				if p.Name == "Ibaraki" {
-					fmt.Printf("year: %s pref: %s value: %.f add: %.f\n", d.Year, p.Name, prefs[p.Name], p.Value)
+				if p.Name == "Okayama" || p.Name == "Ibaraki" || p.Name == "Saga" {
+					fmt.Printf("year: %s pref: %-15s  --  %-5.f + %-5.f = %-5.f\n", d.Year, p.Name, prefs[p.Name], p.Value, prefs[p.Name]+p.Value)
 				}
 
 				prefs[p.Name] += p.Value
@@ -205,7 +202,7 @@ func main() {
 		p.Printf("\n\nNumber of People Affected by Natural Disasters in Japan (2011-2020): %.f\n\n", allPrefsTotal)
 		p.Println("By Prefecture:")
 		for i, e := range sorted {
-			p.Printf("%03d. Pref: %-15s  --  %.02f%%  (%.f / %.f)\n", i+1, e.Name, e.PctOfTotal*100, e.Total, allPrefsTotal)
+			p.Printf("%03d. Pref: %-15s  --  %-5.02f%%  (%-7.f / %-7.f)\n", i+1, e.Name, e.PctOfTotal*100, e.Total, allPrefsTotal)
 		}
 	}
 }
