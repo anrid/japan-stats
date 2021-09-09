@@ -70,7 +70,7 @@ func main() {
 					Stat:       "Population",
 					Name:       name,
 					NameJP:     nameJP,
-					Value:      v,
+					Value:      v * 1_000,
 					PctOfTotal: v / pop.Total,
 				})
 			}
@@ -150,20 +150,30 @@ func main() {
 
 	// Calculate disaster stats.
 	{
+		type sum struct {
+			Value float64
+			Count int
+		}
+
 		var allAffectedTotal float64
 		var allPrefsTotal float64
-		prefs := make(map[string]float64)
+		prefs := make(map[string]*sum)
 
 		for _, d := range disasterStats {
 			allAffectedTotal += d.PersonsAffectedTotal
 
 			var prefsTotal float64
 			for _, p := range d.Prefectures {
-				if p.Name == "Okayama" || p.Name == "Ibaraki" || p.Name == "Saga" {
-					fmt.Printf("year: %s pref: %-15s  --  %-5.f + %-5.f = %-5.f\n", d.Year, p.Name, prefs[p.Name], p.Value, prefs[p.Name]+p.Value)
+				if _, ok := prefs[p.Name]; !ok {
+					prefs[p.Name] = &sum{}
 				}
 
-				prefs[p.Name] += p.Value
+				if p.Name == "Okayama" || p.Name == "Ibaraki" || p.Name == "Saga" {
+					fmt.Printf("year: %s pref: %-15s  --  %-5.f + %-5.f = %-5.f\n", d.Year, p.Name, prefs[p.Name].Value, p.Value, prefs[p.Name].Value+p.Value)
+				}
+				prefs[p.Name].Value += p.Value
+				prefs[p.Name].Count++
+
 				prefsTotal += p.Value
 				allPrefsTotal += p.Value
 			}
@@ -177,23 +187,44 @@ func main() {
 		}
 
 		type entry struct {
-			Name       string
-			Total      float64
-			PctOfTotal float64
+			Name            string
+			AvgAffected     float64
+			Population      float64
+			PctOfPopulation float64
 		}
 
 		var sorted []entry
 
 		for p, total := range prefs {
+			avg := total.Value / float64(total.Count)
+
+			var prefPop *stats.Prefecture
+			for _, pp := range pop.Prefectures {
+				if pp.Name == p {
+					prefPop = pp
+					break
+				}
+			}
+			if prefPop == nil {
+				log.Panicf("Could not find population for prefecture %s\n", p)
+			}
+			if prefPop.Value == 0 {
+				log.Panicf("No population value set for prefecture %s\n", prefPop.Name)
+			}
+			if avg > prefPop.Value {
+				log.Panicf("Number of people affected %.f is larger than population %.f for prefecture %s\n", total.Value, prefPop.Value, prefPop.Name)
+			}
+
 			sorted = append(sorted, entry{
-				Name:       p,
-				Total:      total,
-				PctOfTotal: total / allPrefsTotal,
+				Name:            p,
+				AvgAffected:     avg,
+				Population:      prefPop.Value,
+				PctOfPopulation: avg / prefPop.Value,
 			})
 		}
 
 		sort.SliceStable(sorted, func(i, j int) bool {
-			return sorted[i].PctOfTotal > sorted[j].PctOfTotal
+			return sorted[i].PctOfPopulation > sorted[j].PctOfPopulation
 		})
 
 		// New locale number printer.
@@ -202,7 +233,7 @@ func main() {
 		p.Printf("\n\nNumber of People Affected by Natural Disasters in Japan (2011-2020): %.f\n\n", allPrefsTotal)
 		p.Println("By Prefecture:")
 		for i, e := range sorted {
-			p.Printf("%03d. Pref: %-15s  --  %-5.02f%%  (%-7.f / %-7.f)\n", i+1, e.Name, e.PctOfTotal*100, e.Total, allPrefsTotal)
+			p.Printf("%02d. %-15s  --  %-5.05f%%  %6.f / %12.f\n", i+1, e.Name, e.PctOfPopulation*100, e.AvgAffected, e.Population)
 		}
 	}
 }
