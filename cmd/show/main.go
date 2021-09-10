@@ -221,7 +221,7 @@ func main() {
 		})
 
 		p.Printf("\n\nNumber of People Affected by Natural Disasters in Japan (2011-2020): %.f\n\n", personsAffectedTotal)
-		p.Println("By Prefecture, Per Capita:")
+		p.Println("By Prefecture, Per Capita (Mean):")
 
 		for i, e := range sorted {
 			p.Printf("%02d. %-15s  --  %-5.05f%%  %6.f / %12.f\n",
@@ -239,7 +239,7 @@ func main() {
 		p.Println("By Prefecture, By Total Affected:")
 
 		for i, e := range sorted {
-			p.Printf("%02d. %-15s  --  %-5.02f%% (%7.f / %9.f)\n",
+			p.Printf("%02d. %-15s  --  %-5.02f%%   %7.f / %9.f\n",
 				i+1, e.Prefecture,
 				e.OfAllAffectedPct*100, e.AffectedTotal, personsAffectedTotal,
 			)
