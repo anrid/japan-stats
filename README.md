@@ -4,7 +4,7 @@ Uses data from https://www.stat.go.jp/english/data/nenkan/index.html
 
 To aggregate stats into reports such as:
 
-```json
+```bash
 
 Number of People Affected by Natural Disasters in Japan (2011-2020): 396,917
 
